@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { RecordEntry } from './types';
 import { parseInput } from './parser';
-import { Send, User, CheckCircle2, MessageSquare, Vote, Tag } from 'lucide-react';
+import { Send, CheckCircle2, MessageSquare, Vote, Tag } from 'lucide-react';
 
 interface MainLogViewProps {
   records: RecordEntry[];

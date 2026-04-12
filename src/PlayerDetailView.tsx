@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { RecordEntry } from './types';
-import { User, Vote, CheckCircle2, MessageSquare, Tag } from 'lucide-react';
+import { User } from 'lucide-react';
 
 interface PlayerDetailViewProps {
   playerCount: number;

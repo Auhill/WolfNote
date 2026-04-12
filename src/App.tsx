@@ -23,12 +23,13 @@ const App: React.FC = () => {
     }
   }, [gameState]);
 
-  const handleStartGame = (playerCount: number, initialRoles: { role: Role; count: number }[]) => {
+  const handleStartGame = (playerCount: number, _initialRoles: { role: Role; count: number }[]) => {
     const newState: GameState = {
       playerCount,
       players: Array.from({ length: playerCount }, (_, i) => ({
         id: i + 1,
         roles: [],
+        statusLabels: [],
         isAlive: true,
       })),
       records: [],

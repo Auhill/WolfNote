@@ -1,4 +1,4 @@
-import { RecordEntry, VoteRecord, SpeechRecord, RoleMarkRecord, StatusMarkRecord } from './types';
+import { RecordEntry } from './types';
 
 export function parseInput(input: string): RecordEntry | null {
   const timestamp = Date.now();

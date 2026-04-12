@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { RecordEntry, Hypothesis, Role } from './types';
-import { Layers, Plus, ChevronRight, Check, Trash2 } from 'lucide-react';
+import { Layers, Plus, ChevronRight, Trash2 } from 'lucide-react';
 
 interface RoleOverviewViewProps {
   playerCount: number;
@@ -26,6 +26,7 @@ export const RoleOverviewView: React.FC<RoleOverviewViewProps> = ({
     if (marks.length === 0) return '未知';
     
     const latest = marks[marks.length - 1];
+    if (latest.type !== 'mark') return '未知';
     return `${latest.data.role} (${latest.data.weight})`;
   };
 
@@ -33,7 +34,10 @@ export const RoleOverviewView: React.FC<RoleOverviewViewProps> = ({
     const statusRecords = records.filter(r => r.type === 'status' && r.data.playerId === pid);
     // Get unique status labels (most recent for each label or just all unique?)
     // Let's show all unique labels applied to this player.
-    const labels = Array.from(new Set(statusRecords.map(r => r.data.label)));
+    const labels = Array.from(new Set(statusRecords.map(r => {
+      if (r.type === 'status') return r.data.label;
+      return null;
+    }).filter((l): l is string => l !== null)));
     return labels;
   };
 
