@@ -18,6 +18,7 @@ const DEFAULT_ROLES: { role: Role; count: number }[] = [
 export const SetupView: React.FC<SetupViewProps> = ({ onStart }) => {
   const [playerCount, setPlayerCount] = useState(12);
   const [roles, setRoles] = useState(DEFAULT_ROLES);
+  const [newRoleName, setNewRoleName] = useState('');
 
   const updateRoleCount = (index: number, delta: number) => {
     const newRoles = [...roles];
@@ -27,6 +28,17 @@ export const SetupView: React.FC<SetupViewProps> = ({ onStart }) => {
     // Auto-update total player count based on roles
     const total = newRoles.reduce((sum, r) => sum + r.count, 0);
     setPlayerCount(total);
+  };
+
+  const addCustomRole = () => {
+    if (!newRoleName.trim()) return;
+    if (roles.some(r => r.role === newRoleName.trim())) {
+      alert('该身份已存在');
+      return;
+    }
+    setRoles([...roles, { role: newRoleName.trim(), count: 1 }]);
+    setPlayerCount(prev => prev + 1);
+    setNewRoleName('');
   };
 
   return (
@@ -47,6 +59,24 @@ export const SetupView: React.FC<SetupViewProps> = ({ onStart }) => {
 
       <div className="space-y-3 mb-8">
         <h2 className="text-lg font-semibold">身份配置</h2>
+        
+        {/* Add custom role input */}
+        <div className="flex space-x-2 mb-4">
+          <input 
+            type="text" 
+            placeholder="输入新身份名称" 
+            value={newRoleName}
+            onChange={(e) => setNewRoleName(e.target.value)}
+            className="flex-1 px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button 
+            onClick={addCustomRole}
+            className="px-4 py-2 bg-green-600 text-white font-bold rounded-lg shadow active:scale-95 transition-transform"
+          >
+            添加
+          </button>
+        </div>
+
         {roles.map((r, i) => (
           <div key={r.role} className="flex items-center justify-between p-2 border-b dark:border-gray-700">
             <span>{r.role}</span>
