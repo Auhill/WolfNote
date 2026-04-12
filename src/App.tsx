@@ -4,9 +4,10 @@ import { SetupView } from './SetupView';
 import { MainLogView } from './MainLogView';
 import { PlayerDetailView } from './PlayerDetailView';
 import { RoleOverviewView } from './RoleOverviewView';
-import { LayoutList, User, Layers, RotateCcw } from 'lucide-react';
+import { CommandHelpView } from './CommandHelpView';
+import { LayoutList, User, Layers, RotateCcw, HelpCircle } from 'lucide-react';
 
-type View = 'setup' | 'main' | 'player' | 'overview';
+type View = 'setup' | 'main' | 'player' | 'overview' | 'help';
 
 const STORAGE_KEY = 'wolf_note_state';
 
@@ -113,6 +114,9 @@ const App: React.FC = () => {
             onDeleteHypothesis={handleDeleteHypothesis}
           />
         )}
+        {currentView === 'help' && (
+          <CommandHelpView />
+        )}
       </main>
 
       {/* Navigation Bar */}
@@ -143,6 +147,15 @@ const App: React.FC = () => {
         >
           <Layers className="w-6 h-6" />
           <span className="text-[10px] font-medium">总览分线</span>
+        </button>
+        <button 
+          onClick={() => setCurrentView('help')}
+          className={`flex-1 py-3 flex flex-col items-center justify-center space-y-1 ${
+            currentView === 'help' ? 'text-blue-600' : 'text-gray-400'
+          }`}
+        >
+          <HelpCircle className="w-6 h-6" />
+          <span className="text-[10px] font-medium">指令说明</span>
         </button>
       </nav>
     </div>
