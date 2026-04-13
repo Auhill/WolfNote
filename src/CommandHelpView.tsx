@@ -1,5 +1,5 @@
 import React from 'react';
-import { HelpCircle, Vote, CheckCircle2, Tag, MessageSquare } from 'lucide-react';
+import { HelpCircle, Vote, CheckCircle2, Tag, MessageSquare, Skull, UserMinus } from 'lucide-react';
 
 export const CommandHelpView: React.FC = () => {
   const commands = [
@@ -38,6 +38,20 @@ export const CommandHelpView: React.FC = () => {
       syntax: 's[玩家]:[状态]',
       example: 's1:倒钩',
       desc: '给1号打上“倒钩”、“冲锋”等逻辑状态标签。'
+    },
+    {
+      icon: <Skull className="w-5 h-5 text-red-500" />,
+      title: '玩家死亡',
+      syntax: 'd[玩家]',
+      example: 'd1',
+      desc: '记录1号玩家在当前天死亡（夜间出人等）。'
+    },
+    {
+      icon: <UserMinus className="w-5 h-5 text-orange-500" />,
+      title: '投票出局',
+      syntax: 'o[玩家]',
+      example: 'o1',
+      desc: '记录1号玩家在当前天被放逐出局。'
     },
     {
       icon: <MessageSquare className="w-5 h-5 text-orange-500" />,

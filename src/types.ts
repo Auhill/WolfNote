@@ -30,11 +30,21 @@ export interface StatusMarkRecord {
   label: PlayerStatusLabel;
 }
 
+export interface DeathRecord {
+  playerId: number;
+}
+
+export interface OutRecord {
+  playerId: number;
+}
+
 export type RecordEntry = 
-  | { type: 'vote'; data: VoteRecord; raw: string; timestamp: number }
-  | { type: 'speech'; data: SpeechRecord; raw: string; timestamp: number }
-  | { type: 'mark'; data: RoleMarkRecord; raw: string; timestamp: number }
-  | { type: 'status'; data: StatusMarkRecord; raw: string; timestamp: number };
+  | { type: 'vote'; data: VoteRecord; raw: string; timestamp: number; day: number }
+  | { type: 'speech'; data: SpeechRecord; raw: string; timestamp: number; day: number }
+  | { type: 'mark'; data: RoleMarkRecord; raw: string; timestamp: number; day: number }
+  | { type: 'status'; data: StatusMarkRecord; raw: string; timestamp: number; day: number }
+  | { type: 'death'; data: DeathRecord; raw: string; timestamp: number; day: number }
+  | { type: 'out'; data: OutRecord; raw: string; timestamp: number; day: number };
 
 export interface Hypothesis {
   id: string;
@@ -49,4 +59,5 @@ export interface GameState {
   records: RecordEntry[];
   hypotheses: Hypothesis[];
   currentHypothesisId: string | null;
+  currentDay: number;
 }

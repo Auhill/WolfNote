@@ -36,9 +36,18 @@ const App: React.FC = () => {
       records: [],
       hypotheses: [],
       currentHypothesisId: null,
+      currentDay: 1,
     };
     setGameState(newState);
     setCurrentView('main');
+  };
+
+  const handleNextDay = () => {
+    if (!gameState) return;
+    setGameState({
+      ...gameState,
+      currentDay: gameState.currentDay + 1,
+    });
   };
 
   const handleReset = () => {
@@ -97,6 +106,8 @@ const App: React.FC = () => {
           <MainLogView 
             records={gameState.records} 
             onAddRecord={handleAddRecord} 
+            currentDay={gameState.currentDay}
+            onNextDay={handleNextDay}
           />
         )}
         {currentView === 'player' && (

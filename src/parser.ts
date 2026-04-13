@@ -1,6 +1,6 @@
 import { RecordEntry } from './types';
 
-export function parseInput(input: string): RecordEntry | null {
+export function parseInput(input: string, day: number): RecordEntry | null {
   const timestamp = Date.now();
   
   // Normalize input: Replace Chinese colons, commas and ideographic commas with English ones
@@ -24,7 +24,8 @@ export function parseInput(input: string): RecordEntry | null {
         voters
       },
       raw: input,
-      timestamp
+      timestamp,
+      day
     };
   }
 
@@ -43,7 +44,8 @@ export function parseInput(input: string): RecordEntry | null {
         weight
       },
       raw: input,
-      timestamp
+      timestamp,
+      day
     };
   }
 
@@ -60,11 +62,38 @@ export function parseInput(input: string): RecordEntry | null {
         label
       },
       raw: input,
-      timestamp
+      timestamp,
+      day
     };
   }
 
-  // 4. Speech: t[player]:[content]
+  // 4. Death: d[player]
+  const deathMatch = normalized.match(/^d(\d+)$/);
+  if (deathMatch) {
+    const playerId = parseInt(deathMatch[1], 10);
+    return {
+      type: 'death',
+      data: { playerId },
+      raw: input,
+      timestamp,
+      day
+    };
+  }
+
+  // 5. Out: o[player]
+  const outMatch = normalized.match(/^o(\d+)$/);
+  if (outMatch) {
+    const playerId = parseInt(outMatch[1], 10);
+    return {
+      type: 'out',
+      data: { playerId },
+      raw: input,
+      timestamp,
+      day
+    };
+  }
+
+  // 6. Speech: t[player]:[content]
   const speechMatch = normalized.match(/^t(\d+)[:](.+)$/);
   if (speechMatch) {
     const playerId = parseInt(speechMatch[1], 10);
@@ -77,7 +106,8 @@ export function parseInput(input: string): RecordEntry | null {
         content
       },
       raw: input,
-      timestamp
+      timestamp,
+      day
     };
   }
 
