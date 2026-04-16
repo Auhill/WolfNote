@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { RecordEntry, Hypothesis, Role } from './types';
-import { Layers, Plus, ChevronRight, Trash2 } from 'lucide-react';
+import { Layers, Plus, ChevronRight, Trash2, FileText, Copy, X } from 'lucide-react';
 
 interface RoleOverviewViewProps {
   playerCount: number;
@@ -18,7 +18,72 @@ export const RoleOverviewView: React.FC<RoleOverviewViewProps> = ({
   onDeleteHypothesis
 }) => {
   const [showAddH, setShowAddH] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
   const [newH, setNewH] = useState({ title: '', assumptions: [] as { playerId: number; role: Role }[] });
+
+  // Generate the structured text for AI analysis
+  const generateSummaryText = () => {
+    let text = `狼人杀对局概览 (用于逻辑推导分析)\n`;
+    text += `玩家总数: ${playerCount}\n`;
+    text += `当前进度: 第 ${records.length > 0 ? Math.max(...records.map(r => r.day)) : 1} 天\n\n`;
+
+    text += `--- 对局详细记录 ---\n`;
+    const days = Array.from(new Set(records.map(r => r.day))).sort((a, b) => a - b);
+    
+    days.forEach(day => {
+      text += `[第 ${day} 天]\n`;
+      const dayRecords = records.filter(r => r.day === day).sort((a, b) => a.timestamp - b.timestamp);
+      
+      dayRecords.forEach(r => {
+        switch (r.type) {
+          case 'speech':
+            text += `- ${r.data.playerId}号发言: "${r.data.content}"\n`;
+            break;
+          case 'vote':
+            const typeStr = r.data.type === 'sheriff_vote' ? '警长投票' : '放逐投票';
+            text += `- ${typeStr}: ${r.data.voters.join(',')} 投给 ${r.data.target === 0 ? '弃票' : r.data.target + '号'}\n`;
+            break;
+          case 'mark':
+            text += `- 标记: ${r.data.playerId}号 为 ${r.data.role} (权重:${r.data.weight})\n`;
+            break;
+          case 'status':
+            text += `- 状态: ${r.data.playerId}号 被标记为 "${r.data.label}"\n`;
+            break;
+          case 'death':
+            text += `- 死亡事件: ${r.data.playerId}号 玩家死亡\n`;
+            break;
+          case 'out':
+            text += `- 出局事件: ${r.data.playerId}号 玩家被投票放逐\n`;
+            break;
+        }
+      });
+      text += `\n`;
+    });
+
+    if (hypotheses.length > 0) {
+      text += `--- 现有逻辑假设 ---\n`;
+      hypotheses.forEach(h => {
+        text += `分线: ${h.title}\n`;
+        h.assumptions.forEach(a => {
+          text += `  - 假设 ${a.playerId}号 是 ${a.role}\n`;
+        });
+        h.deductions.forEach(d => {
+          text += `  - 推论: ${d}\n`;
+        });
+        text += `\n`;
+      });
+    }
+
+    text += `\n请根据以上信息，分析当前的局势，判断谁最有可能是真预言家，谁最有可能是狼人，并给出逻辑理由。`;
+    return text;
+  };
+
+  const copyToClipboard = () => {
+    const text = generateSummaryText();
+    navigator.clipboard.writeText(text).then(() => {
+      alert('已复制到剪贴板，快去粘贴给 AI 吧！');
+    });
+  };
 
   // Calculate most probable roles for each player based on marks
   const getProbableRoles = (pid: number) => {
@@ -50,10 +115,19 @@ export const RoleOverviewView: React.FC<RoleOverviewViewProps> = ({
 
   return (
     <div className="flex flex-col h-full p-4 overflow-y-auto">
-      <h2 className="text-xl font-bold mb-4 flex items-center">
-        <Layers className="w-5 h-5 mr-2 text-blue-500" />
-        身份总览
-      </h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold flex items-center">
+          <Layers className="w-5 h-5 mr-2 text-blue-500" />
+          身份总览
+        </h2>
+        <button 
+          onClick={() => setShowSummary(true)}
+          className="flex items-center space-x-1 px-3 py-1.5 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 rounded-lg text-xs font-bold shadow-sm active:scale-95 transition-all"
+        >
+          <FileText className="w-4 h-4" />
+          <span>AI 分析概览</span>
+        </button>
+      </div>
 
       <div className="grid grid-cols-2 gap-3 mb-8">
         {Array.from({ length: playerCount }, (_, i) => i + 1).map(id => (
@@ -183,6 +257,44 @@ export const RoleOverviewView: React.FC<RoleOverviewViewProps> = ({
                 className="flex-1 py-2 bg-blue-600 text-white rounded-lg font-bold"
               >
                 确定
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSummary && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-gray-900 w-full max-w-lg rounded-2xl flex flex-col max-h-[80vh] shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-800">
+            <div className="p-4 border-b dark:border-gray-800 flex justify-between items-center bg-indigo-50/50 dark:bg-indigo-900/20">
+              <div className="flex items-center space-x-2">
+                <FileText className="w-5 h-5 text-indigo-600" />
+                <h3 className="font-bold text-gray-800 dark:text-gray-200">AI 分析概览文本</h3>
+              </div>
+              <button onClick={() => setShowSummary(false)} className="p-1 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-full">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4">
+              <pre className="text-xs font-mono whitespace-pre-wrap leading-relaxed text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-black/40 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                {generateSummaryText()}
+              </pre>
+            </div>
+
+            <div className="p-4 border-t dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 flex space-x-3">
+              <button 
+                onClick={() => setShowSummary(false)}
+                className="flex-1 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold active:scale-95 transition-all"
+              >
+                关闭
+              </button>
+              <button 
+                onClick={copyToClipboard}
+                className="flex-[2] py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-500/30 flex items-center justify-center space-x-2 active:scale-95 transition-all"
+              >
+                <Copy className="w-4 h-4" />
+                <span>复制全部文本</span>
               </button>
             </div>
           </div>
