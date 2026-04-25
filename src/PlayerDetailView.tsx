@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { RecordEntry } from './types';
-import { User, Calendar, Skull, Pin, Quote } from 'lucide-react';
+import { User, Calendar, Skull, Pin } from 'lucide-react';
 
 interface PlayerDetailViewProps {
   playerCount: number;
