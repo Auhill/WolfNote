@@ -217,6 +217,7 @@ const App: React.FC = () => {
             hypotheses={gameState.hypotheses}
             onAddHypothesis={handleAddHypothesis}
             onDeleteHypothesis={handleDeleteHypothesis}
+            onTogglePin={handleTogglePin}
           />
         )}
         {currentView === 'myspeech' && (

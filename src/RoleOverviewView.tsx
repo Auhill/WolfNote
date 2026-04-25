@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { RecordEntry, Hypothesis, Role } from './types';
-import { Layers, Plus, ChevronRight, Trash2, FileText, Copy, X } from 'lucide-react';
+import { Layers, Plus, ChevronRight, Trash2, FileText, Pin, X } from 'lucide-react';
 
 interface RoleOverviewViewProps {
   playerCount: number;
@@ -8,6 +8,7 @@ interface RoleOverviewViewProps {
   hypotheses: Hypothesis[];
   onAddHypothesis: (h: Hypothesis) => void;
   onDeleteHypothesis: (id: string) => void;
+  onTogglePin: (recordId: string) => void;
 }
 
 export const RoleOverviewView: React.FC<RoleOverviewViewProps> = ({ 
@@ -15,7 +16,8 @@ export const RoleOverviewView: React.FC<RoleOverviewViewProps> = ({
   records, 
   hypotheses, 
   onAddHypothesis,
-  onDeleteHypothesis
+  onDeleteHypothesis,
+  onTogglePin
 }) => {
   const [showAddH, setShowAddH] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
@@ -86,12 +88,15 @@ export const RoleOverviewView: React.FC<RoleOverviewViewProps> = ({
   };
 
   // Calculate most probable roles for each player based on marks
-  const getProbableRoles = (pid: number) => {
+  const getLatestMark = (pid: number) => {
     const marks = records.filter(r => r.type === 'mark' && r.data.playerId === pid);
-    if (marks.length === 0) return '未知';
-    
-    const latest = marks[marks.length - 1];
-    if (latest.type !== 'mark') return '未知';
+    if (marks.length === 0) return null;
+    return marks[marks.length - 1];
+  };
+
+  const getProbableRoles = (pid: number) => {
+    const latest = getLatestMark(pid);
+    if (!latest || latest.type !== 'mark') return '未知';
     return `${latest.data.role} (${latest.data.weight})`;
   };
 
@@ -130,21 +135,38 @@ export const RoleOverviewView: React.FC<RoleOverviewViewProps> = ({
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-8">
-        {Array.from({ length: playerCount }, (_, i) => i + 1).map(id => (
-          <div key={id} className="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 flex justify-between items-center">
-            <div className="flex flex-col">
-              <span className="w-8 h-8 flex items-center justify-center bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded-full font-bold mb-1">{id}</span>
-              <div className="flex flex-wrap gap-1">
-                {getStatusLabels(id).map(label => (
-                  <span key={label} className="px-1 py-0.5 bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-300 text-[8px] rounded font-bold uppercase">
-                    {label}
-                  </span>
-                ))}
+        {Array.from({ length: playerCount }, (_, i) => i + 1).map(id => {
+          const latestMark = getLatestMark(id);
+          return (
+            <div key={id} className="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col space-y-2">
+              <div className="flex justify-between items-start">
+                <div className="flex flex-col">
+                  <span className="w-8 h-8 flex items-center justify-center bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded-full font-bold mb-1">{id}</span>
+                  <div className="flex flex-wrap gap-1">
+                    {getStatusLabels(id).map(label => (
+                      <span key={label} className="px-1 py-0.5 bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-300 text-[8px] rounded font-bold uppercase">
+                        {label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                {latestMark && (
+                  <button 
+                    onClick={() => onTogglePin(latestMark.id)}
+                    className={`p-1.5 rounded-full transition-colors ${latestMark.pinned ? 'text-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'text-gray-300 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                    title={latestMark.pinned ? "取消固定" : "固定到我的发言"}
+                  >
+                    <Pin className={`w-3.5 h-3.5 ${latestMark.pinned ? 'fill-current' : ''}`} />
+                  </button>
+                )}
+              </div>
+              <div className="flex justify-between items-center pt-1 border-t border-gray-50 dark:border-gray-700">
+                <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">身份</span>
+                <span className="text-sm font-medium">{getProbableRoles(id)}</span>
               </div>
             </div>
-            <span className="text-sm font-medium">{getProbableRoles(id)}</span>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="flex justify-between items-center mb-4">
