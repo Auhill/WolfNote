@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { RecordEntry, Hypothesis, Role } from './types';
-import { Layers, Plus, ChevronRight, Trash2, FileText, Pin, X } from 'lucide-react';
+import { Layers, Plus, ChevronRight, Trash2, FileText, Pin, X, Copy } from 'lucide-react';
 
 interface RoleOverviewViewProps {
   playerCount: number;
