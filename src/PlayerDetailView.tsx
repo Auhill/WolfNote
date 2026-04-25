@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { RecordEntry } from './types';
-import { User, Calendar, Skull } from 'lucide-react';
+import { User, Calendar, Skull, Pin, Quote } from 'lucide-react';
 
 interface PlayerDetailViewProps {
   playerCount: number;
   records: RecordEntry[];
+  onTogglePin: (recordId: string) => void;
 }
 
-export const PlayerDetailView: React.FC<PlayerDetailViewProps> = ({ playerCount, records }) => {
+export const PlayerDetailView: React.FC<PlayerDetailViewProps> = ({ playerCount, records, onTogglePin }) => {
   const [selectedPlayer, setSelectedPlayer] = useState(1);
 
   const playerRecords = records.filter(r => {
@@ -18,6 +19,9 @@ export const PlayerDetailView: React.FC<PlayerDetailViewProps> = ({ playerCount,
       return r.data.playerId === selectedPlayer;
     }
     if (r.type === 'speech') {
+      return r.data.playerId === selectedPlayer;
+    }
+    if (r.type === 'expression') {
       return r.data.playerId === selectedPlayer;
     }
     return false;
@@ -88,24 +92,35 @@ export const PlayerDetailView: React.FC<PlayerDetailViewProps> = ({ playerCount,
                 {groupedRecords[day].map((r, i) => {
                   const time = new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                   return (
-                    <div key={r.timestamp + i} className="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
+                    <div key={r.id || r.timestamp + i} className="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 group relative">
                       <div className="flex justify-between items-start mb-1">
-                        <span className="text-[10px] text-gray-400">{time}</span>
-                        <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${
-                          r.type === 'vote' ? 'bg-blue-100 text-blue-600' :
-                          r.type === 'mark' ? 'bg-green-100 text-green-600' :
-                          r.type === 'status' ? 'bg-purple-100 text-purple-600' :
-                          r.type === 'death' ? 'bg-red-100 text-red-600' :
-                          r.type === 'out' ? 'bg-orange-100 text-orange-600' :
-                          'bg-gray-100 text-gray-600'
-                        }`}>
-                          {r.type === 'vote' ? '投票' : 
-                           r.type === 'mark' ? '标记' : 
-                           r.type === 'status' ? '状态' : 
-                           r.type === 'death' ? '死亡' : 
-                           r.type === 'out' ? '出局' : 
-                           '发言'}
-                        </span>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-[10px] text-gray-400">{time}</span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${
+                            r.type === 'vote' ? 'bg-blue-100 text-blue-600' :
+                            r.type === 'mark' ? 'bg-green-100 text-green-600' :
+                            r.type === 'status' ? 'bg-purple-100 text-purple-600' :
+                            r.type === 'death' ? 'bg-red-100 text-red-600' :
+                            r.type === 'out' ? 'bg-orange-100 text-orange-600' :
+                            r.type === 'expression' ? 'bg-indigo-100 text-indigo-600' :
+                            'bg-gray-100 text-gray-600'
+                          }`}>
+                            {r.type === 'vote' ? '投票' : 
+                             r.type === 'mark' ? '标记' : 
+                             r.type === 'status' ? '状态' : 
+                             r.type === 'death' ? '死亡' : 
+                             r.type === 'out' ? '出局' : 
+                             r.type === 'expression' ? '我的表达' :
+                             '发言'}
+                          </span>
+                        </div>
+                        <button 
+                          onClick={() => onTogglePin(r.id)}
+                          className={`p-1 rounded-full transition-colors ${r.pinned ? 'text-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'text-gray-300 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                          title={r.pinned ? "取消固定" : "固定到我的发言"}
+                        >
+                          <Pin className={`w-3 h-3 ${r.pinned ? 'fill-current' : ''}`} />
+                        </button>
                       </div>
                       
                       {r.type === 'vote' && (
@@ -134,6 +149,11 @@ export const PlayerDetailView: React.FC<PlayerDetailViewProps> = ({ playerCount,
                       )}
                       {r.type === 'speech' && (
                         <p className="text-sm italic text-gray-600 dark:text-gray-400">"{r.data.content}"</p>
+                      )}
+                      {r.type === 'expression' && (
+                        <p className="text-sm font-medium text-indigo-700 dark:text-indigo-300">
+                          {r.data.content}
+                        </p>
                       )}
                     </div>
                   );

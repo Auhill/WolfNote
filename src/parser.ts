@@ -1,5 +1,7 @@
 import { RecordEntry } from './types';
 
+const generateId = () => Math.random().toString(36).substring(2, 11);
+
 export function parseInput(input: string, day: number): RecordEntry | null {
   const timestamp = Date.now();
   
@@ -17,6 +19,7 @@ export function parseInput(input: string, day: number): RecordEntry | null {
     
     // Support v0:5 (abstain) where 0 is the target
     return {
+      id: generateId(),
       type: 'vote',
       data: {
         type: isSheriff ? 'sheriff_vote' : 'vote',
@@ -37,6 +40,7 @@ export function parseInput(input: string, day: number): RecordEntry | null {
     const weight = markMatch[3] ? parseFloat(markMatch[3]) : 1.0;
     
     return {
+      id: generateId(),
       type: 'mark',
       data: {
         playerId,
@@ -56,6 +60,7 @@ export function parseInput(input: string, day: number): RecordEntry | null {
     const label = statusMatch[2];
     
     return {
+      id: generateId(),
       type: 'status',
       data: {
         playerId,
@@ -72,6 +77,7 @@ export function parseInput(input: string, day: number): RecordEntry | null {
   if (deathMatch) {
     const playerId = parseInt(deathMatch[1], 10);
     return {
+      id: generateId(),
       type: 'death',
       data: { playerId },
       raw: input,
@@ -85,6 +91,7 @@ export function parseInput(input: string, day: number): RecordEntry | null {
   if (outMatch) {
     const playerId = parseInt(outMatch[1], 10);
     return {
+      id: generateId(),
       type: 'out',
       data: { playerId },
       raw: input,
@@ -100,6 +107,7 @@ export function parseInput(input: string, day: number): RecordEntry | null {
     const content = speechMatch[2].trim();
     
     return {
+      id: generateId(),
       type: 'speech',
       data: {
         playerId,
@@ -108,6 +116,27 @@ export function parseInput(input: string, day: number): RecordEntry | null {
       raw: input,
       timestamp,
       day
+    };
+  }
+
+  // 7. Expression: m[player]:[content] or m:[content]
+  const expressionMatch = normalized.match(/^m(\d*)[:](.+)$/);
+  if (expressionMatch) {
+    const playerId = expressionMatch[1] ? parseInt(expressionMatch[1], 10) : undefined;
+    const content = expressionMatch[2].trim();
+    
+    return {
+      id: generateId(),
+      type: 'expression',
+      data: {
+        playerId,
+        content
+      },
+      raw: input,
+      timestamp,
+      day,
+      pinned: true,
+      pinnedAt: timestamp
     };
   }
 

@@ -38,13 +38,28 @@ export interface OutRecord {
   playerId: number;
 }
 
+export interface ExpressionRecord {
+  playerId?: number;
+  content: string;
+}
+
+export interface RecordEntryBase {
+  id: string;
+  raw: string;
+  timestamp: number;
+  day: number;
+  pinned?: boolean;
+  pinnedAt?: number;
+}
+
 export type RecordEntry = 
-  | { type: 'vote'; data: VoteRecord; raw: string; timestamp: number; day: number }
-  | { type: 'speech'; data: SpeechRecord; raw: string; timestamp: number; day: number }
-  | { type: 'mark'; data: RoleMarkRecord; raw: string; timestamp: number; day: number }
-  | { type: 'status'; data: StatusMarkRecord; raw: string; timestamp: number; day: number }
-  | { type: 'death'; data: DeathRecord; raw: string; timestamp: number; day: number }
-  | { type: 'out'; data: OutRecord; raw: string; timestamp: number; day: number };
+  | (RecordEntryBase & { type: 'vote'; data: VoteRecord })
+  | (RecordEntryBase & { type: 'speech'; data: SpeechRecord })
+  | (RecordEntryBase & { type: 'mark'; data: RoleMarkRecord })
+  | (RecordEntryBase & { type: 'status'; data: StatusMarkRecord })
+  | (RecordEntryBase & { type: 'death'; data: DeathRecord })
+  | (RecordEntryBase & { type: 'out'; data: OutRecord })
+  | (RecordEntryBase & { type: 'expression'; data: ExpressionRecord });
 
 export interface Hypothesis {
   id: string;
@@ -60,4 +75,5 @@ export interface GameState {
   hypotheses: Hypothesis[];
   currentHypothesisId: string | null;
   currentDay: number;
+  pinnedOrder: string[]; // IDs of pinned records in order
 }

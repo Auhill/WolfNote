@@ -5,16 +5,44 @@ import { MainLogView } from './MainLogView';
 import { PlayerDetailView } from './PlayerDetailView';
 import { RoleOverviewView } from './RoleOverviewView';
 import { CommandHelpView } from './CommandHelpView';
-import { LayoutList, User, Layers, RotateCcw, HelpCircle } from 'lucide-react';
+import { MySpeechView } from './MySpeechView';
+import { LayoutList, User, Layers, RotateCcw, HelpCircle, MessageSquare } from 'lucide-react';
 
-type View = 'setup' | 'main' | 'player' | 'overview' | 'help';
+type View = 'setup' | 'main' | 'player' | 'overview' | 'help' | 'myspeech';
 
 const STORAGE_KEY = 'wolf_note_state';
 
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState | null>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : null;
+    if (!saved) return null;
+    const parsed = JSON.parse(saved);
+    
+    // Migration: ensure records have IDs
+    let changed = false;
+    if (parsed && parsed.records) {
+      parsed.records = parsed.records.map((r: any) => {
+        if (!r.id) {
+          changed = true;
+          return { ...r, id: Math.random().toString(36).substring(2, 11) };
+        }
+        return r;
+      });
+    }
+
+    // Migration: ensure pinnedOrder exists
+    if (parsed && !parsed.pinnedOrder) {
+      changed = true;
+      parsed.pinnedOrder = parsed.records
+        .filter((r: RecordEntry) => r.pinned)
+        .sort((a: RecordEntry, b: RecordEntry) => (b.pinnedAt || 0) - (a.pinnedAt || 0))
+        .map((r: RecordEntry) => r.id);
+    }
+
+    if (changed) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+    }
+    return parsed;
   });
   const [currentView, setCurrentView] = useState<View>(gameState ? 'main' : 'setup');
 
@@ -37,6 +65,7 @@ const App: React.FC = () => {
       hypotheses: [],
       currentHypothesisId: null,
       currentDay: 1,
+      pinnedOrder: [],
     };
     setGameState(newState);
     setCurrentView('main');
@@ -60,9 +89,72 @@ const App: React.FC = () => {
 
   const handleAddRecord = (record: RecordEntry) => {
     if (!gameState) return;
+    const newRecords = [...gameState.records, record];
+    let newPinnedOrder = [...gameState.pinnedOrder];
+    
+    if (record.pinned) {
+      newPinnedOrder = [record.id, ...newPinnedOrder];
+    }
+
     setGameState({
       ...gameState,
-      records: [...gameState.records, record],
+      records: newRecords,
+      pinnedOrder: newPinnedOrder,
+    });
+  };
+
+  const handleTogglePin = (recordId: string) => {
+    if (!gameState) return;
+    const record = gameState.records.find(r => r.id === recordId);
+    if (!record) return;
+
+    const isPinned = !!record.pinned;
+    const timestamp = Date.now();
+
+    const newRecords = gameState.records.map(r => 
+      r.id === recordId 
+        ? { ...r, pinned: !isPinned, pinnedAt: !isPinned ? timestamp : undefined } 
+        : r
+    );
+
+    let newPinnedOrder = [...gameState.pinnedOrder];
+    if (!isPinned) {
+      // Add to top
+      newPinnedOrder = [recordId, ...newPinnedOrder];
+    } else {
+      // Remove
+      newPinnedOrder = newPinnedOrder.filter(id => id !== recordId);
+    }
+
+    setGameState({
+      ...gameState,
+      records: newRecords,
+      pinnedOrder: newPinnedOrder,
+    });
+  };
+
+  const handleUpdatePinnedOrder = (newOrder: string[]) => {
+    if (!gameState) return;
+    setGameState({
+      ...gameState,
+      pinnedOrder: newOrder,
+    });
+  };
+
+  const handleClearAllPinned = () => {
+    if (!gameState) return;
+    if (!confirm('确定要清空所有已固定的发言信息吗？')) return;
+
+    const newRecords = gameState.records.map(r => ({
+      ...r,
+      pinned: false,
+      pinnedAt: undefined
+    }));
+
+    setGameState({
+      ...gameState,
+      records: newRecords,
+      pinnedOrder: [],
     });
   };
 
@@ -108,12 +200,14 @@ const App: React.FC = () => {
             onAddRecord={handleAddRecord} 
             currentDay={gameState.currentDay}
             onNextDay={handleNextDay}
+            onTogglePin={handleTogglePin}
           />
         )}
         {currentView === 'player' && (
           <PlayerDetailView 
             playerCount={gameState.playerCount} 
             records={gameState.records} 
+            onTogglePin={handleTogglePin}
           />
         )}
         {currentView === 'overview' && (
@@ -123,6 +217,15 @@ const App: React.FC = () => {
             hypotheses={gameState.hypotheses}
             onAddHypothesis={handleAddHypothesis}
             onDeleteHypothesis={handleDeleteHypothesis}
+          />
+        )}
+        {currentView === 'myspeech' && (
+          <MySpeechView 
+            records={gameState.records}
+            pinnedOrder={gameState.pinnedOrder}
+            onUpdateOrder={handleUpdatePinnedOrder}
+            onTogglePin={handleTogglePin}
+            onClearAll={handleClearAllPinned}
           />
         )}
         {currentView === 'help' && (
@@ -149,6 +252,15 @@ const App: React.FC = () => {
         >
           <User className="w-6 h-6" />
           <span className="text-[10px] font-medium">人员视图</span>
+        </button>
+        <button 
+          onClick={() => setCurrentView('myspeech')}
+          className={`flex-1 py-3 flex flex-col items-center justify-center space-y-1 ${
+            currentView === 'myspeech' ? 'text-blue-600' : 'text-gray-400'
+          }`}
+        >
+          <MessageSquare className="w-6 h-6" />
+          <span className="text-[10px] font-medium">我的发言</span>
         </button>
         <button 
           onClick={() => setCurrentView('overview')}

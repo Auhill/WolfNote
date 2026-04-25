@@ -1,8 +1,16 @@
 import React from 'react';
-import { HelpCircle, Vote, CheckCircle2, Tag, MessageSquare, Skull, UserMinus } from 'lucide-react';
+import { HelpCircle, Vote, CheckCircle2, Tag, MessageSquare, Skull, UserMinus, Quote } from 'lucide-react';
 
 export const CommandHelpView: React.FC = () => {
   const commands = [
+    {
+      icon: <Quote className="w-5 h-5 text-indigo-500" />,
+      title: '我的表达',
+      syntax: 'm[玩家?]:[内容]',
+      example: 'm9:发言有矛盾',
+      desc: '记录自己的推导逻辑，会自动固定到“我的发言”视图。',
+      fuzzy: '可以不带玩家ID，如 m:怀疑1,2是狼。'
+    },
     {
       icon: <Vote className="w-5 h-5 text-blue-500" />,
       title: '投票记录',
