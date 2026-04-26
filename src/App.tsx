@@ -12,6 +12,7 @@ type View = 'setup' | 'main' | 'player' | 'overview' | 'help' | 'myspeech';
 
 const STORAGE_KEY = 'wolf_note_state';
 
+// WolfNote App - Main Entry
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState | null>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
